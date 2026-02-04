@@ -13,7 +13,7 @@ Each diagram visualizes the interaction between:
 ## 🏗️ 1. User Management
 
 ### 1.1 User Gets Registered
-*User installs app and creates identity.*
+**Simple explanation:** When a user first installs the app, the app creates secret security keys on their phone. These keys are used to lock and unlock messages. The "public" part of these keys is sent to the server so friends can find and start a safe chat with the user.
 
 ```mermaid
 sequenceDiagram
@@ -37,7 +37,7 @@ sequenceDiagram
 ```
 
 ### 1.2 User Updates Account Info
-*Updating profile name/avatar.*
+**Simple explanation:** When a user changes their name or profile picture, the app updates the info on the phone and also sends it to the server. This way, other users can see the updated profile.
 
 ```mermaid
 sequenceDiagram
@@ -55,7 +55,7 @@ sequenceDiagram
 ```
 
 ### 1.3 User Looks for Friends Among Contacts
-*Privacy-preserving contact discovery.*
+**Simple explanation:** The app looks at the phone numbers in the contact list. It turns these numbers into hidden codes and sends them to the server. The server checks which of these people are already using the app and tells your phone, so you can start chatting.
 
 ```mermaid
 sequenceDiagram
@@ -83,7 +83,7 @@ sequenceDiagram
 ## 📨 2. Peer-to-Peer Messaging (1-on-1)
 
 ### 2.1 User A Sends Message to User B (First Time)
-*Establish session via X3DH.*
+**Simple explanation:** To start a chat, User A's app gets User B's public keys from the server. Using these keys, the app sets up a secure connection and locks the message so only User B can read it.
 
 ```mermaid
 sequenceDiagram
@@ -115,7 +115,7 @@ sequenceDiagram
 ```
 
 ### 2.2 User A Sends Message to Known User B (Ongoing)
-*Double Ratchet Flow.*
+**Simple explanation:** Once the chat has started, the app uses a different key for every single message. This makes the conversation extremely secure. The app locks the message, sends it, and prepares a new key for the next one.
 
 ```mermaid
 sequenceDiagram
@@ -133,7 +133,7 @@ sequenceDiagram
 ```
 
 ### 2.3 Online vs Offline Client Handling (The Inbox)
-*What happens when B is Offline vs Online.*
+**Simple explanation:** If the receiver is online, the message is delivered immediately. If they are offline, the server saves the message in a temporary 'Inbox'. As soon as the receiver opens the app, they receive all saved messages, and the server deletes them forever.
 
 ```mermaid
 sequenceDiagram
@@ -163,7 +163,7 @@ sequenceDiagram
 ```
 
 ### 2.4 User A Deletes Chat with User B
-*Local deletion only (Signal philosophy).*
+**Simple explanation:** Deleting a chat only removes it from your own phone. It does not delete anything from the other person's phone or the server. This is a local action for your own privacy.
 
 ```mermaid
 sequenceDiagram
@@ -178,7 +178,7 @@ sequenceDiagram
 ```
 
 ### 2.5 User B Denies Chat Deletion
-*(Wait, if deletion is local, B can't deny it. Assuming this means "Deleting for Everyone" feature request? Signal Protocol usually doesn't support 'Delete for Everyone' securely easily, but here is a flow if implemented via a 'Delete Request' message)*
+**Simple explanation:** If you try to delete a message for everyone, the other person's app receives a request. If they choose to deny it, the message stays on their phone.
 
 ```mermaid
 sequenceDiagram
@@ -198,6 +198,7 @@ sequenceDiagram
 ## 👥 3. Group Operations
 
 ### 3.1 User Creates a Group
+**Simple explanation:** When you create a group and add friends, the server makes a record of the group. Your app then sends a special group-key to each member individually so everyone can talk to each other securely.
 
 ```mermaid
 sequenceDiagram
@@ -222,7 +223,7 @@ sequenceDiagram
 ```
 
 ### 3.2 User Sends Message to Group
-*Efficient Sender Key Encryption.*
+**Simple explanation:** When you send a group message, your app locks it once using your group-key. The server then sends this locked message to everyone in the group. Each member uses your key to unlock and read it.
 
 ```mermaid
 sequenceDiagram
@@ -243,6 +244,7 @@ sequenceDiagram
 ```
 
 ### 3.3 User Leaves Group
+**Simple explanation:** When a user leaves a group, the server removes them from the member list. A system message is sent to the group to let everyone know that the user has left.
 
 ```mermaid
 sequenceDiagram
@@ -260,6 +262,7 @@ sequenceDiagram
 ## 🛡️ 4. Administration & Moderation
 
 ### 4.1 User Reports User B
+**Simple explanation:** If a user is bothersome, you can report them. Your app sends a report to the admins. You can also choose to attach a few recent messages so the admins can see what happened.
 
 ```mermaid
 sequenceDiagram
@@ -276,6 +279,7 @@ sequenceDiagram
 ```
 
 ### 4.2 Administrator Bans User
+**Simple explanation:** An admin can block a user if they break rules. The server disables their account, and the user will see a "Suspended" message on their phone.
 
 ```mermaid
 sequenceDiagram
@@ -294,7 +298,7 @@ sequenceDiagram
 ```
 
 ### 4.3 Administrator Broadcasts Message
-*System-wide announcement.*
+**Simple explanation:** Admins can send an announcement to every single user at once (like for maintenance). These messages are sent in plain text, not encrypted, as they are public system messages.
 
 ```mermaid
 sequenceDiagram
@@ -309,7 +313,7 @@ sequenceDiagram
 ```
 
 ### 4.4 Admin Queries DB (Stats)
-*Offline time, last connection, etc.*
+**Simple explanation:** Admins can check reports inside the system, such as seeing which users have been offline for a long time or how many people are using the app.
 
 ```mermaid
 sequenceDiagram
@@ -328,7 +332,7 @@ sequenceDiagram
 ## 🏷️ 5. Special Features (Tags & "//" Entries)
 
 ### 5.1 User Tags User B (@mention)
-*Inside a message.*
+**Simple explanation:** When you type @ followed by a name, the app finds that person's ID. It adds a tag to the message so the mentioned person knows they were called out in the chat.
 
 ```mermaid
 sequenceDiagram
@@ -348,7 +352,7 @@ sequenceDiagram
 ```
 
 ### 5.2 User Queries All Users with Specific Tag
-*Searching public profiles.*
+**Simple explanation:** You can search for people using tags, like searching for "#Doctor". The server looks through everyone's profile and shows you a list of people who have that tag.
 
 ```mermaid
 sequenceDiagram
@@ -363,6 +367,7 @@ sequenceDiagram
 ```
 
 ### 5.3 User Enters New "//" Entry (Slash Command / Note)
+**Simple explanation:** If you type something starting with "//", like "//todo", the app saves it as a quick note on your phone. This information stays private on your device.
 
 ```mermaid
 sequenceDiagram
