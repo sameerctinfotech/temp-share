@@ -385,4 +385,103 @@ sequenceDiagram
 
 ---
 
-> This covers the technical flow of all 26+ requested use cases, detailing the interaction between Client DB, Crypto Engine, Server, and Server DB.
+## 🛠️ Developer Implementation Guide
+
+This section is for developers to understand the local storage and data structures used in the app.
+
+### 🗄️ 1. Frontend Database Schema (SQLCipher)
+The mobile app uses an encrypted SQL database (SQLCipher) to store keys and messages. There are **6 main tables**:
+
+1.  **`identity`**: Stores your own secret identity keys.
+2.  **`prekeys`**: Stores one-time keys used to start new chats.
+3.  **`signed_prekeys`**: Stores medium-term security keys.
+4.  **`sessions`**: Stores the current "state" of your 1-on-1 chats (who you are talking to and which key is next).
+5.  **`sender_keys`**: Stores group chat keys for every group member.
+6.  **`messages`**: Stores the actual chat history (decrypted text, image paths, etc.).
+
+#### 📝 SQL Table Example (`messages`)
+```sql
+CREATE TABLE messages (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id  TEXT,    -- User ID or Group ID
+    sender_id        TEXT,
+    body             TEXT,    -- Decrypted message text
+    type             INTEGER, -- 1=Text, 2=Image, 3=System
+    status           INTEGER, -- 0=Sending, 1=Sent, 2=Read
+    timestamp        INTEGER,
+    is_me            BOOLEAN, -- 1 if sent by you
+    attachment_path  TEXT     -- Path to local image/video file
+);
+```
+
+---
+
+### 📋 2. Common Data Models (JSON Examples)
+These are the data formats used when sending/receiving information from the server.
+
+#### 👤 2.1 User Profile Discovery
+*When searching for a friend via their phone hash.*
+```json
+{
+  "userId": "user_abc_123",
+  "displayName": "Alice Smith",
+  "status": "Available",
+  "avatarUrl": "https://server.com/avatars/alice.jpg",
+  "isRegistered": true
+}
+```
+
+#### 🔐 2.2 Key Bundle (Security Setup)
+*Fetched when starting a new chat for the first time.*
+```json
+{
+  "registrationId": 54321,
+  "identityKey": "base64_public_identity_key...",
+  "signedPreKey": {
+    "id": 1,
+    "key": "base64_signed_prekey...",
+    "signature": "base64_signature..."
+  },
+  "oneTimePreKey": "base64_single_use_key..."
+}
+```
+
+#### 📩 2.3 Message Envelope (The Locked Box)
+*The format used to send any encrypted message.*
+```json
+{
+  "senderId": "alice_uid",
+  "senderDeviceId": 1,
+  "messageType": 3, 
+  "ciphertext": "base64_encrypted_data_blob...",
+  "timestamp": 1706500000000
+}
+```
+
+#### 🖼️ 2.4 Media Pointer (Attachments)
+*Included inside an encrypted message for photos/videos.*
+```json
+{
+  "type": "image",
+  "downloadUrl": "https://storage.com/files/img_99.bin",
+  "decryptionKey": "base64_random_aes_key...",
+  "iv": "base64_initialization_vector...",
+  "fileName": "photo.jpg",
+  "fileSize": 1048576
+}
+```
+
+#### 🛡️ 2.5 Admin Report
+*When reporting a user for bad behavior.*
+```json
+{
+  "reporterId": "user_123",
+  "targetId": "bad_user_456",
+  "reason": "SPAM",
+  "evidenceMessages": ["MsgID_1", "MsgID_2"]
+}
+```
+
+---
+
+> This guide provides everything a developer needs to implement the flows described in the diagrams above: the database structures to save data and the JSON formats to talk to the server.
