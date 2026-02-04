@@ -111,7 +111,7 @@ sequenceDiagram
     CA_E2E->>Server: 9. Send Message
     Server->>SDB: 10. Store in B's Inbox
     
-    Note over Server, UB: Delivery depends on Online Status (See 2.4)
+    Note over Server, UB: Delivery depends on Online Status (See 2.3)
 ```
 
 ### 2.2 User A Sends Message to Known User B (Ongoing)
