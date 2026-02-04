@@ -5,8 +5,8 @@ Each diagram visualizes the interaction between:
 *   **User**
 *   **Client DB** (Local SQLCipher)
 *   **Client E2EE** (Signal Protocol Engine)
-*   **Server** (API/Firestore)
-*   **Server DB** (Cloud Storage)
+*   **Server** (Backend API)
+*   **Server Storage** (Cloud DB)
 
 ---
 
@@ -21,7 +21,7 @@ sequenceDiagram
     participant CDB as 💾 Client DB
     participant E2EE as 🔐 Client E2EE
     participant Server as ☁️ Server API
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
 
     User->>CDB: 1. Input Phone & Basic Info
     CDB->>E2EE: 2. Generate Identity Key Pair
@@ -31,8 +31,8 @@ sequenceDiagram
     E2EE->>CDB: 5. Store Private Keys (Encrypted)
     
     CDB->>Server: 6. Upload Public Key Bundle
-    Server->>SDB: 7. Store Bundle inside /keys/{userId}
-    SDB-->>Server: Success
+    Server->>SS: 7. Store Bundle inside /keys/{userId}
+    SS-->>Server: Success
     Server-->>User: 8. Registration Complete (200 OK)
 ```
 
@@ -44,13 +44,13 @@ sequenceDiagram
     participant User
     participant CDB as 💾 Client DB
     participant Server as ☁️ Server
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
 
     User->>CDB: 1. Change Name to "Alice Pro"
     CDB->>CDB: 2. Update Local User Table
     CDB->>Server: 3. POST /profile {name: "Alice Pro"}
-    Server->>SDB: 4. Update /users/{id} Document
-    SDB-->>Server: Ack
+    Server->>SS: 4. Update /users/{id} Document
+    SS-->>Server: Ack
     Server-->>User: 5. Profile Updated
 ```
 
@@ -63,15 +63,15 @@ sequenceDiagram
     participant Phone as 📱 Contact Book
     participant CDB as 💾 Client DB
     participant Server as ☁️ Server
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
 
     User->>Phone: 1. "Sync Contacts"
     Phone-->>CDB: 2. Return Raw List (+123, +456...)
     CDB->>CDB: 3. Hash Numbers (SHA256)
     
     CDB->>Server: 4. Send List of Hashes
-    Server->>SDB: 5. Query matching User Hashes
-    SDB-->>Server: Return Matches (UserIDs)
+    Server->>SS: 5. Query matching User Hashes
+    SS-->>Server: Return Matches (UserIDs)
     
     Server-->>CDB: 6. Return Registered User List
     CDB->>CDB: 7. Save to 'Contacts' Table
@@ -91,7 +91,7 @@ sequenceDiagram
     participant CA_DB as 💾 Client A DB
     participant CA_E2E as 🔐 Client A E2E
     participant Server as ☁️ Server
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
     participant CB_E2E as 🔐 Client B E2E
     participant CB_DB as 💾 Client B DB
     participant UB as User B
@@ -100,8 +100,8 @@ sequenceDiagram
     CA_DB->>CA_DB: 2. Check Session? (No)
     
     CA_DB->>Server: 3. Get PreKey Bundle (B)
-    Server->>SDB: 4. Fetch Bundle
-    SDB-->>Server: Return Bundle
+    Server->>SS: 4. Fetch Bundle
+    SS-->>Server: Return Bundle
     Server-->>CA_E2E: 5. Receive {IK_B, SPK_B, OPK_B}
     
     CA_E2E->>CA_E2E: 6. X3DH Handshake (Derive Root Key)
@@ -109,7 +109,7 @@ sequenceDiagram
     CA_E2E->>CA_E2E: 8. Encrypt "Hi B" (PreKeyMessage)
     
     CA_E2E->>Server: 9. Send Message
-    Server->>SDB: 10. Store in B's Inbox
+    Server->>SS: 10. Store in B's Inbox
     
     Note over Server, UB: Delivery depends on Online Status (See 2.3)
 ```
@@ -138,27 +138,27 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Server as ☁️ Server
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
     participant CB_Net as 📡 Client B Network
     participant CB_DB as 💾 Client B DB
 
     Note over Server: Message Arrives for B
-    Server->>SDB: 1. Persist to /inbox/b/messages/{id}
+    Server->>SS: 1. Persist to /inbox/b/messages/{id}
     
     alt B is Online
         Server->>CB_Net: 2. Stream Event
-        CB_Net->>SDB: 3. Fetch Message Payload
+        CB_Net->>SS: 3. Fetch Message Payload
         CB_Net->>CB_DB: 4. Process & Decrypt
-        CB_Net->>SDB: 5. Ack (Delete Verified)
-        SDB-->>Server: Message Removed
+        CB_Net->>SS: 5. Ack (Delete Verified)
+        SS-->>Server: Message Removed
     else B is Offline
-        Note over SDB: Message stays in DB
+        Note over SS: Message stays in Storage
         Note over CB_Net: ...Time Passes...
         CB_Net->>Server: 6. User B Comes Online (Connect)
         Server->>CB_Net: 7. "You have 5 pending messages"
-        CB_Net->>SDB: 8. Fetch Batch
+        CB_Net->>SS: 8. Fetch Batch
         CB_Net->>CB_DB: 9. Decrypt All
-        CB_Net->>SDB: 10. Delete All from Server
+        CB_Net->>SS: 10. Delete All from Server
     end
 ```
 
@@ -206,12 +206,12 @@ sequenceDiagram
     participant CDB as 💾 Client DB
     participant E2EE as 🔐 Client E2EE
     participant Server as ☁️ Server
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
 
     User->>CDB: 1. Create Group "Team" (Add Bob, Charlie)
     CDB->>Server: 2. POST /groups/create {members: [A,B,C]}
-    Server->>SDB: 3. Create Group Document
-    SDB-->>Server: Return GroupID
+    Server->>SS: 3. Create Group Document
+    SS-->>Server: Return GroupID
     
     Note over E2EE: Sender Key Setup
     E2EE->>E2EE: 4. Generate 'SenderKey' Chain
@@ -219,7 +219,7 @@ sequenceDiagram
     E2EE->>E2EE: 6. Encrypt SenderKey for Charlie (1-to-1)
     
     E2EE->>Server: 7. Send 'Distribution Messages'
-    Server->>SDB: 8. Route to B and C Inboxes
+    Server->>SS: 8. Route to B and C Inboxes
 ```
 
 ### 3.2 User Sends Message to Group
@@ -250,10 +250,10 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant Server as ☁️ Server
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
 
     User->>Server: 1. Leave Group {GroupId}
-    Server->>SDB: 2. Remove UserID from 'members' array
+    Server->>SS: 2. Remove UserID from 'members' array
     Server->>Server: 3. System Msg: "Alice left" -> Group Inbox
 ```
 
@@ -269,13 +269,13 @@ sequenceDiagram
     participant User
     participant App as 📱 Client App
     participant Server as ☁️ Server
-    participant AdminDB as 🗄️ Admin DB
+    participant AS as 🗄️ Admin Storage
 
     User->>App: 1. Report User B (Spam)
     App->>App: 2. Attach Last 5 Messages (Optional)
     App->>Server: 3. POST /reports {target: B, reason: Spam}
-    Server->>AdminDB: 4. Create Ticket
-    Note over AdminDB: Admins review ticket.
+    Server->>AS: 4. Create Ticket
+    Note over AS: Admins review ticket.
 ```
 
 ### 4.2 Administrator Bans User
@@ -285,12 +285,12 @@ sequenceDiagram
 sequenceDiagram
     participant Admin
     participant Server as ☁️ Server
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
     participant Target as 📱 Banned User
 
     Admin->>Server: 1. Ban User B
-    Server->>SDB: 2. Set user status = 'BANNED'
-    Server->>SDB: 3. Revoke Auth Tokens
+    Server->>SS: 2. Set user status = 'BANNED'
+    Server->>SS: 3. Revoke Auth Tokens
     
     Target->>Server: 4. Try Connect / Send
     Server-->>Target: 5. 403 Forbidden (Banned)
@@ -319,11 +319,11 @@ sequenceDiagram
 sequenceDiagram
     participant Admin
     participant Server as ☁️ Server
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
 
     Admin->>Server: 1. Query: "Users offline > 30 days"
-    Server->>SDB: 2. SELECT * FROM users WHERE last_seen < NOW-30d
-    SDB-->>Server: 3. Return List
+    Server->>SS: 2. SELECT * FROM users WHERE last_seen < NOW-30d
+    SS-->>Server: 3. Return List
     Server-->>Admin: 4. Show Report
 ```
 
@@ -358,11 +358,11 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant Server as ☁️ Server
-    participant SDB as 🗄️ Server DB
+    participant SS as 🗄️ Server Storage
 
     User->>Server: 1. Search Users with Tag "#Doctor"
-    Server->>SDB: 2. Query Index: users_by_tag
-    SDB-->>Server: 3. Return Matching Profiles
+    Server->>SS: 2. Query Index: users_by_tag
+    SS-->>Server: 3. Return Matching Profiles
     Server-->>User: 4. List of Doctors
 ```
 
@@ -385,4 +385,4 @@ sequenceDiagram
 
 ---
 
-> This covers the technical flow of all 26+ requested use cases, detailing the interaction between Client DB, Crypto Engine, Server, and Server DB.
+> This covers the technical flow of all 26+ requested use cases, detailing the interaction between Client DB, Crypto Engine, Server, and Server Storage.
