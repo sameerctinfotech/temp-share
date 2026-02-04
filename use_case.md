@@ -1,4 +1,4 @@
-# 📚 Signal Chat POC: Complete Use Case Flows (Technical Deep Dive)
+# Complete Use Case Flows (Technical Deep Dive)
 
 This document contains **detailed technical sequence diagrams** for every requested use case.
 Each diagram visualizes the interaction between:
