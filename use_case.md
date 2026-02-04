@@ -146,7 +146,7 @@ sequenceDiagram
     Server->>SDB: 1. Persist to /inbox/b/messages/{id}
     
     alt B is Online
-        Server->>CB_Net: 2. Push Notification / Stream Event
+        Server->>CB_Net: 2. Stream Event
         CB_Net->>SDB: 3. Fetch Message Payload
         CB_Net->>CB_DB: 4. Process & Decrypt
         CB_Net->>SDB: 5. Ack (Delete Verified)
@@ -304,7 +304,7 @@ sequenceDiagram
     
     Admin->>Server: 1. Send Broadcast "Maintenance at 2PM"
     Server->>Server: 2. Iterate All Active Users
-    Server->>AllUsers: 3. Push Notification (System Channel)
+    Server->>AllUsers: 3. Stream Message (System Channel)
     Note over AllUsers: Not E2E Encrypted (Plaintext System Msg)
 ```
 
@@ -341,7 +341,7 @@ sequenceDiagram
     App->>E2EE: 3. Encrypt Body: "Hello @{uuid-of-bob}"
     App->>App: 4. Add Metadata: mentions=[BobUUID]
     
-    Note over E2EE: Metadata is usually plaintext header (for server push logic)
+    Note over E2EE: Metadata is usually plaintext header
     Note over E2EE: OR encrypted inside signal envelope (secure).
     
     E2EE->>Server: 5. Send Message
